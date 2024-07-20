@@ -1,0 +1,115 @@
+{
+  "categories": [
+    {
+      "name": "Pasta",
+      "items": [
+        {"name": "Kurkure Pasta", "price": 69},
+        {"name": "Red Sauce Pasta", "price": 119},
+        {"name": "White Sauce Pasta", "price": 119},
+        {"name": "Pink Sauce Pasta", "price": 119},
+        {"name": "Makhni Pasta", "price": 119},
+        {"name": "Mac and Cheese", "price": 139}
+      ]
+    },
+    {
+      "name": "Burger",
+      "items": [
+        {"name": "Crispy Veg", "price": 49},
+        {"name": "Crispy Veg Cheese", "price": 69},
+        {"name": "Veg Makhni", "price": 69},
+        {"name": "Paneer Tikki", "price": 69},
+        {"name": "Makhni Paneer Tikki", "price": 79},
+        {"name": "Supreme Veg", "price": 99},
+        {"name": "Supreme Paneer", "price": 119}
+      ]
+    },
+    {
+      "name": "Coffee",
+      "items": [
+        {"name": "Hot Coffee", "price": 39},
+        {"name": "Cold Coffee", "price": 59},
+        {"name": "Iced Coffee", "price": 59},
+        {"name": "Cold Mocha", "price": 59},
+        {"name": "Hot Chocolate", "price": 59},
+        {"name": "Frappuccino", "price": 69},
+        {"name": "Hot Nutella", "price": 99}
+      ]
+    },
+    {
+      "name": "Tea",
+      "items": [
+        {"name": "Chai", "price": 19},
+        {"name": "Masala Chai", "price": 29},
+        {"name": "Lemon Iced Tea", "price": 49},
+        {"name": "Peach Iced Tea", "price": 59},
+        {"name": "Raspberry Iced Tea", "price": 59}
+      ]
+    },
+    {
+      "name": "Mojitos",
+      "items": [
+        {"name": "Virgin Mojito", "price": 59},
+        {"name": "Blue Mojito", "price": 69},
+        {"name": "Watermelon Mojito", "price": 69},
+        {"name": "Strawberry Mojito", "price": 69},
+        {"name": "Raspberry Mojito", "price": 69},
+        {"name": "Blueberry Mojito", "price": 69},
+        {"name": "Green Apple Mojito", "price": 69},
+        {"name": "Litchi Mojito", "price": 69},
+        {"name": "Pineapple Mojito", "price": 69}
+      ]
+    },
+    {
+      "name": "Sandwich",
+      "items": [
+        {"name": "Aloo Sandwich", "price": 39},
+        {"name": "Mixed Veg Sandwich", "price": 69},
+        {"name": "Cheesy Peri Peri", "price": 69},
+        {"name": "Mumbai Style Grill", "price": 79},
+        {"name": "Paneer Tikka Grill", "price": 79},
+        {"name": "Cheese Burst Pizza sandwich", "price": 89}
+      ]
+    },
+    {
+      "name": "Maggi",
+      "items": [
+        {"name": "Plain Maggi", "price": 39},
+        {"name": "Masala Maggi", "price": 49},
+        {"name": "Peri Peri Maggi", "price": 59},
+        {"name": "Tandoori Maggi", "price": 69},
+        {"name": "Veg Cheese Maggi", "price": 79}
+      ]
+    },
+    {
+      "name": "Fries & Corn",
+      "items": [
+        {"name": "French Fries", "price": 49},
+        {"name": "Cheese Fries", "price": 59},
+        {"name": "Peri Peri Fries", "price": 69},
+        {"name": "Plain Salted Corns", "price": 39},
+        {"name": "Masala Sweet Corns", "price": 49},
+        {"name": "Cheesy Corns", "price": 69}
+      ]
+    },
+    {
+      "name": "Frappe",
+      "items": [
+        {"name": "Caramel frappe", "price": 119},
+        {"name": "Hazelnut frappe", "price": 119},
+        {"name": "Nutella frappe", "price": 119}
+      ]
+    },
+    {
+      "name": "Shakes",
+      "items": [
+        {"name": "Strawberry Shake", "price": 99},
+        {"name": "Chocolate Shake", "price": 99},
+        {"name": "Butterscotch Shake", "price": 99},
+        {"name": "Oreo Shake", "price": 99},
+        {"name": "Kitkat Shake", "price": 99},
+        {"name": "Red Velvet Shake", "price": 119},
+        {"name": "Blueberry Shake", "price": 119}
+      ]
+    }
+  ]
+}
