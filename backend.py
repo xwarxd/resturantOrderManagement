@@ -109,22 +109,9 @@ def get_orders():
 
 @app.route('/orders/<int:order_id>', methods=['DELETE'])
 def delete_order(order_id):
-    date = request.json.get('date')
-    if not date:
-        return jsonify({"error": "Date is required"}), 400
-    
     session = Session()
-    order_date = datetime.strptime(date, '%Y-%m-%d').date()
     
-    # Adjust the date if it's before 3 AM IST
-    ist_time = pytz.timezone('Asia/Kolkata').localize(datetime.strptime(date, '%Y-%m-%d'))
-    if ist_time.hour < 3:
-        order_date = order_date - timedelta(days=1)
-    
-    order = session.query(Order).filter(
-        Order.order_id == order_id,
-        func.date(Order.timestamp) == order_date
-    ).first()
+    order = session.query(Order).filter(Order.order_id == order_id).first()
     
     if not order:
         session.close()
@@ -138,22 +125,9 @@ def delete_order(order_id):
 
 @app.route('/orders/<int:order_id>/toggle-payment', methods=['POST'])
 def toggle_payment(order_id):
-    date = request.json.get('date')
-    if not date:
-        return jsonify({"error": "Date is required"}), 400
-    
     session = Session()
-    order_date = datetime.strptime(date, '%Y-%m-%d').date()
     
-    # Adjust the date if it's before 3 AM IST
-    ist_time = pytz.timezone('Asia/Kolkata').localize(datetime.strptime(date, '%Y-%m-%d'))
-    if ist_time.hour < 3:
-        order_date = order_date - timedelta(days=1)
-    
-    order = session.query(Order).filter(
-        Order.order_id == order_id,
-        func.date(Order.timestamp) == order_date
-    ).first()
+    order = session.query(Order).filter(Order.order_id == order_id).first()
     
     if not order:
         session.close()
