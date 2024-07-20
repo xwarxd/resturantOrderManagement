@@ -19,15 +19,14 @@ def get_menu():
 def place_order():
     order = request.json
     now = datetime.now()
-    
     # Adjust the date if it's before 3 AM
     if now.hour < 3:
         order_date = (now - timedelta(days=1)).strftime('%Y-%m-%d')
     else:
         order_date = now.strftime('%Y-%m-%d')
-    
+
     date_file = f'orders/{order_date}.json'
-    
+
     # Load existing orders or create a new list
     if os.path.exists(date_file):
         with open(date_file, 'r') as f:
@@ -37,10 +36,10 @@ def place_order():
 
     # Generate a new order ID based on existing orders
     order_id = len(orders) + 1  # Start from 1 for each date
-    
+
     # Calculate total for this order
     order_total = sum(item['price'] * item['quantity'] for item in order)
-    
+
     order_data = {
         "order_id": order_id,
         "items": order,
@@ -59,21 +58,21 @@ def place_order():
 def get_orders():
     all_orders = []
     total_by_date = {}
-    
+
     # List all files in the orders directory
     for filename in os.listdir('orders'):
         if filename.endswith('.json'):
             date = filename[:-5]  # Remove .json extension
             with open(f'orders/{filename}', 'r') as f:
                 orders = json.load(f)
-            
+
             # Calculate total for each order if not present
             for order in orders:
                 if 'total' not in order:
                     order['total'] = sum(item['price'] * item['quantity'] for item in order['items'])
-            
+
             daily_total = sum(order['total'] for order in orders)
-            
+
             all_orders.extend(orders)
             total_by_date[date] = daily_total
 
@@ -92,7 +91,7 @@ def delete_order(order_id):
         return jsonify({"error": "Date is required"}), 400
 
     date_file = f'orders/{date}.json'
-    
+
     if not os.path.exists(date_file):
         return jsonify({"error": "No orders found for this date"}), 404
 
@@ -109,4 +108,4 @@ def delete_order(order_id):
     return jsonify({"message": "Order deleted successfully"}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
