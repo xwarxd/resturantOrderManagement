@@ -51,7 +51,8 @@ def place_order():
         "order_id": order_id,
         "items": order,
         "timestamp": now.isoformat(),
-        "total": order_total
+        "total": order_total,
+        "paid": False  # Set initial payment status to unpaid
     }
     
     orders.append(order_data)  # Append new order to the list
@@ -78,6 +79,8 @@ def get_orders():
             for order in orders:
                 if 'total' not in order:
                     order['total'] = sum(item['price'] * item['quantity'] for item in order['items'])
+                if 'paid' not in order:
+                    order['paid'] = False
             
             daily_total = sum(order['total'] for order in orders)
             all_orders.extend(orders)
@@ -112,6 +115,33 @@ def delete_order(order_id):
         json.dump(orders, f, indent=2)
     
     return jsonify({"message": "Order deleted successfully"}), 200
+
+@app.route('/orders/<int:order_id>/toggle-payment', methods=['POST'])
+def toggle_payment(order_id):
+    date = request.json.get('date')
+    if not date:
+        return jsonify({"error": "Date is required"}), 400
+    
+    date_file = f'orders/{date}.json'
+    if not os.path.exists(date_file):
+        return jsonify({"error": "No orders found for this date"}), 404
+    
+    with open(date_file, 'r') as f:
+        orders = json.load(f)
+    
+    # Find the order and toggle its payment status
+    for order in orders:
+        if order['order_id'] == order_id:
+            order['paid'] = not order['paid']
+            break
+    else:
+        return jsonify({"error": "Order not found"}), 404
+    
+    # Save updated orders back to the file
+    with open(date_file, 'w') as f:
+        json.dump(orders, f, indent=2)
+    
+    return jsonify({"message": "Payment status toggled successfully", "paid": order['paid']}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
