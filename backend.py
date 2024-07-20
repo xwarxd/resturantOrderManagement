@@ -1,12 +1,11 @@
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
-from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
 import pytz
 import json
-import os
 
 app = Flask(__name__)
 CORS(app)
@@ -47,16 +46,19 @@ def place_order():
     
     # Adjust the date if it's before 3 AM IST
     if now.hour < 3:
-        order_date = (now - timedelta(days=1)).strftime('%Y-%m-%d')
+        order_date = (now - timedelta(days=1)).date()
     else:
-        order_date = now.strftime('%Y-%m-%d')
+        order_date = now.date()
     
     session = Session()
     
-    # Get the latest order_id for the current date
-    latest_order = session.query(Order).filter(Order.timestamp >= order_date).order_by(Order.order_id.desc()).first()
-    if latest_order:
-        order_id = latest_order.order_id + 1
+    # Get the highest order_id for the current date
+    highest_order = session.query(func.max(Order.order_id)).filter(
+        func.date(Order.timestamp) == order_date
+    ).scalar()
+    
+    if highest_order is not None:
+        order_id = highest_order + 1
     else:
         order_id = 1
     
@@ -112,7 +114,17 @@ def delete_order(order_id):
         return jsonify({"error": "Date is required"}), 400
     
     session = Session()
-    order = session.query(Order).filter(Order.order_id == order_id, Order.timestamp >= date).first()
+    order_date = datetime.strptime(date, '%Y-%m-%d').date()
+    
+    # Adjust the date if it's before 3 AM IST
+    ist_time = pytz.timezone('Asia/Kolkata').localize(datetime.strptime(date, '%Y-%m-%d'))
+    if ist_time.hour < 3:
+        order_date = order_date - timedelta(days=1)
+    
+    order = session.query(Order).filter(
+        Order.order_id == order_id,
+        func.date(Order.timestamp) == order_date
+    ).first()
     
     if not order:
         session.close()
@@ -131,7 +143,17 @@ def toggle_payment(order_id):
         return jsonify({"error": "Date is required"}), 400
     
     session = Session()
-    order = session.query(Order).filter(Order.order_id == order_id, Order.timestamp >= date).first()
+    order_date = datetime.strptime(date, '%Y-%m-%d').date()
+    
+    # Adjust the date if it's before 3 AM IST
+    ist_time = pytz.timezone('Asia/Kolkata').localize(datetime.strptime(date, '%Y-%m-%d'))
+    if ist_time.hour < 3:
+        order_date = order_date - timedelta(days=1)
+    
+    order = session.query(Order).filter(
+        Order.order_id == order_id,
+        func.date(Order.timestamp) == order_date
+    ).first()
     
     if not order:
         session.close()
