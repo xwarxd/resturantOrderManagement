@@ -1,16 +1,35 @@
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request
 from flask_cors import CORS
-import json
-import os
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
 import pytz
+import json
+import os
 
 app = Flask(__name__)
-CORS(app)  # This allows all origins
+CORS(app)
 
-# Ensure the orders directory exists
-if not os.path.exists('orders'):
-    os.makedirs('orders')
+# Database configuration
+DATABASE_URL = "postgresql://resturantdb_7hi6_user:zvNLfYmh2OpnAmelA5hzC9vh5uSDLmYo@dpg-cqduabhu0jms7391aj50-a.singapore-postgres.render.com/resturantdb_7hi6"
+engine = create_engine(DATABASE_URL)
+Session = sessionmaker(bind=engine)
+Base = declarative_base()
+
+# Define the Order model
+class Order(Base):
+    __tablename__ = 'orders'
+
+    id = Column(Integer, primary_key=True)
+    order_id = Column(Integer)
+    items = Column(String)
+    timestamp = Column(DateTime)
+    total = Column(Float)
+    paid = Column(Boolean)
+
+# Create the table
+Base.metadata.create_all(engine)
 
 # Helper function to get current time in IST
 def get_ist_time():
@@ -23,7 +42,7 @@ def get_menu():
 
 @app.route('/order', methods=['POST'])
 def place_order():
-    order = request.json
+    order_items = request.json
     now = get_ist_time()
     
     # Adjust the date if it's before 3 AM IST
@@ -32,62 +51,54 @@ def place_order():
     else:
         order_date = now.strftime('%Y-%m-%d')
     
-    date_file = f'orders/{order_date}.json'
+    session = Session()
     
-    # Load existing orders or create a new list
-    if os.path.exists(date_file):
-        with open(date_file, 'r') as f:
-            orders = json.load(f)
+    # Get the latest order_id for the current date
+    latest_order = session.query(Order).filter(Order.timestamp >= order_date).order_by(Order.order_id.desc()).first()
+    if latest_order:
+        order_id = latest_order.order_id + 1
     else:
-        orders = []
-    
-    # Generate a new order ID based on existing orders
-    order_id = len(orders) + 1  # Start from 1 for each date
+        order_id = 1
     
     # Calculate total for this order
-    order_total = sum(item['price'] * item['quantity'] for item in order)
+    order_total = sum(item['price'] * item['quantity'] for item in order_items)
     
-    order_data = {
-        "order_id": order_id,
-        "items": order,
-        "timestamp": now.isoformat(),
-        "total": order_total,
-        "paid": False  # Set initial payment status to unpaid
-    }
+    new_order = Order(
+        order_id=order_id,
+        items=json.dumps(order_items),
+        timestamp=now,
+        total=order_total,
+        paid=False
+    )
     
-    orders.append(order_data)  # Append new order to the list
-    
-    # Save updated orders back to the file
-    with open(date_file, 'w') as f:
-        json.dump(orders, f, indent=2)
+    session.add(new_order)
+    session.commit()
+    session.close()
     
     return jsonify({"message": "Order placed successfully", "order_id": order_id}), 201
 
 @app.route('/orders', methods=['GET'])
 def get_orders():
+    session = Session()
+    orders = session.query(Order).order_by(Order.timestamp.desc()).all()
+    
     all_orders = []
     total_by_date = {}
     
-    # List all files in the orders directory
-    for filename in os.listdir('orders'):
-        if filename.endswith('.json'):
-            date = filename[:-5]  # Remove .json extension
-            with open(f'orders/{filename}', 'r') as f:
-                orders = json.load(f)
-            
-            # Calculate total for each order if not present
-            for order in orders:
-                if 'total' not in order:
-                    order['total'] = sum(item['price'] * item['quantity'] for item in order['items'])
-                if 'paid' not in order:
-                    order['paid'] = False
-            
-            daily_total = sum(order['total'] for order in orders)
-            all_orders.extend(orders)
-            total_by_date[date] = daily_total
+    for order in orders:
+        order_dict = {
+            "order_id": order.order_id,
+            "items": json.loads(order.items),
+            "timestamp": order.timestamp.isoformat(),
+            "total": order.total,
+            "paid": order.paid
+        }
+        all_orders.append(order_dict)
+        
+        date = order.timestamp.strftime('%Y-%m-%d')
+        total_by_date[date] = total_by_date.get(date, 0) + order.total
     
-    # Sort orders by timestamp
-    all_orders.sort(key=lambda x: x['timestamp'], reverse=True)
+    session.close()
     
     return jsonify({
         "orders": all_orders,
@@ -100,19 +111,16 @@ def delete_order(order_id):
     if not date:
         return jsonify({"error": "Date is required"}), 400
     
-    date_file = f'orders/{date}.json'
-    if not os.path.exists(date_file):
-        return jsonify({"error": "No orders found for this date"}), 404
+    session = Session()
+    order = session.query(Order).filter(Order.order_id == order_id, Order.timestamp >= date).first()
     
-    with open(date_file, 'r') as f:
-        orders = json.load(f)
+    if not order:
+        session.close()
+        return jsonify({"error": "Order not found"}), 404
     
-    # Find and remove the order
-    orders = [order for order in orders if order['order_id'] != order_id]
-    
-    # Save updated orders back to the file
-    with open(date_file, 'w') as f:
-        json.dump(orders, f, indent=2)
+    session.delete(order)
+    session.commit()
+    session.close()
     
     return jsonify({"message": "Order deleted successfully"}), 200
 
@@ -122,26 +130,18 @@ def toggle_payment(order_id):
     if not date:
         return jsonify({"error": "Date is required"}), 400
     
-    date_file = f'orders/{date}.json'
-    if not os.path.exists(date_file):
-        return jsonify({"error": "No orders found for this date"}), 404
+    session = Session()
+    order = session.query(Order).filter(Order.order_id == order_id, Order.timestamp >= date).first()
     
-    with open(date_file, 'r') as f:
-        orders = json.load(f)
-    
-    # Find the order and toggle its payment status
-    for order in orders:
-        if order['order_id'] == order_id:
-            order['paid'] = not order['paid']
-            break
-    else:
+    if not order:
+        session.close()
         return jsonify({"error": "Order not found"}), 404
     
-    # Save updated orders back to the file
-    with open(date_file, 'w') as f:
-        json.dump(orders, f, indent=2)
+    order.paid = not order.paid
+    session.commit()
+    session.close()
     
-    return jsonify({"message": "Payment status toggled successfully", "paid": order['paid']}), 200
+    return jsonify({"message": "Payment status toggled successfully", "paid": order.paid}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
