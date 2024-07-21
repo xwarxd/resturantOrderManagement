@@ -1,16 +1,15 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://resturantdb_7hi6_user:zvNLfYmh2OpnAmelA5hzC9vh5uSDLmYo@dpg-cqduabhu0jms7391aj50-a.singapore-postgres.render.com/resturantdb_7hi6"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Database configuration
+DATABASE_URL = "postgresql://resturantdb_7hi6_user:zvNLfYmh2OpnAmelA5hzC9vh5uSDLmYo@dpg-cqduabhu0jms7391aj50-a.singapore-postgres.render.com/resturantdb_7hi6"
+engine = create_engine(DATABASE_URL)
+Session = sessionmaker(bind=engine)
+Base = declarative_base()
 
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-
-class Order(db.Model):
+# Define the Order model with the new 'note' column
+class Order(Base):
     __tablename__ = 'orders'
 
     id = Column(Integer, primary_key=True)
@@ -19,9 +18,14 @@ class Order(db.Model):
     timestamp = Column(DateTime)
     total = Column(Float)
     paid = Column(Boolean)
-    note = Column(String(255))  # New column for the note
+    note = Column(String(255))  # New column
+
+def run_migration():
+    # Create the new column
+    with engine.connect() as connection:
+        connection.execute('ALTER TABLE orders ADD COLUMN IF NOT EXISTS note VARCHAR(255)')
+    
+    print("Migration completed successfully. 'note' column added to 'orders' table.")
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    print("Database tables created. You can now run the migration commands.")
+    run_migration()
