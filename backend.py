@@ -30,6 +30,7 @@ class Order(Base):
     timestamp = Column(DateTime)
     total = Column(Float)
     paid = Column(Boolean)
+    note = Column(String(255))  # New column for the note
 
 # Create the table
 Base.metadata.create_all(engine)
@@ -45,7 +46,9 @@ def get_menu():
 
 @app.route('/order', methods=['POST'])
 def place_order():
-    order_items = request.json
+    order_data = request.json
+    order_items = order_data['items']
+    note = order_data.get('note', '')  # Get the note from the request, default to empty string
     now = get_ist_time()
     
     # Adjust the date if it's before 3 AM IST
@@ -74,7 +77,8 @@ def place_order():
             items=json.dumps(order_items),
             timestamp=now,
             total=order_total,
-            paid=False
+            paid=False,
+            note=note  # Add the note to the new order
         )
         
         session.add(new_order)
@@ -106,7 +110,8 @@ def get_orders():
                 "items": json.loads(order.items),
                 "timestamp": order.timestamp.isoformat(),
                 "total": order.total,
-                "paid": order.paid
+                "paid": order.paid,
+                "note": order.note  # Include the note in the response
             }
             all_orders.append(order_dict)
             
