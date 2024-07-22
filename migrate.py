@@ -10,7 +10,7 @@ engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
-# Define the Order model with the new 'unqID' column
+# Define the Order model
 class Order(Base):
     __tablename__ = 'orders'
     id = Column(Integer, primary_key=True)
@@ -20,15 +20,15 @@ class Order(Base):
     total = Column(Float)
     paid = Column(Boolean)
     note = Column(String(255))
-    unqID = Column(String(10), unique=True)  # New column
+    unqID = Column(String(10), unique=True)  # Kept as unqID
 
 def generate_unique_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
 
 def run_migration():
-    # Create the new column
+    # Create the new column with exact case
     with engine.connect() as connection:
-        connection.execute('ALTER TABLE orders ADD COLUMN IF NOT EXISTS unqID VARCHAR(10) UNIQUE')
+        connection.execute('ALTER TABLE orders ADD COLUMN IF NOT EXISTS "unqID" VARCHAR(10) UNIQUE')
     
     # Generate and set unique IDs for existing orders
     session = Session()
