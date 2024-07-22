@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 import pytz
 import json
 import logging
+import random
+import string
 
 app = Flask(__name__)
 CORS(app)
@@ -30,7 +32,8 @@ class Order(Base):
     timestamp = Column(DateTime)
     total = Column(Float)
     paid = Column(Boolean)
-    note = Column(String(255))  # New column for the note
+    note = Column(String(255))
+    unqID = Column(String(10), unique=True)  # New column
 
 # Create the table
 Base.metadata.create_all(engine)
@@ -40,6 +43,10 @@ def get_ist_time():
     ist = pytz.timezone('Asia/Kolkata')
     return datetime.now(ist)
 
+# Helper function to generate unique ID
+def generate_unique_id():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+
 @app.route('/menu', methods=['GET'])
 def get_menu():
     return send_file('menu.json', mimetype='application/json')
@@ -48,10 +55,9 @@ def get_menu():
 def place_order():
     order_data = request.json
     order_items = order_data['items']
-    note = order_data.get('note', '')  # Get the note from the request, default to empty string
+    note = order_data.get('note', '')
     now = get_ist_time()
     
-    # Adjust the date if it's before 3 AM IST
     if now.hour < 3:
         order_date = (now - timedelta(days=1)).date()
     else:
@@ -59,17 +65,12 @@ def place_order():
     
     session = Session()
     try:
-        # Get the highest order_id for the current date
         highest_order = session.query(func.max(Order.order_id)).filter(
             func.date(Order.timestamp) == order_date
         ).scalar()
         
-        if highest_order is not None:
-            order_id = highest_order + 1
-        else:
-            order_id = 1
+        order_id = highest_order + 1 if highest_order is not None else 1
         
-        # Calculate total for this order
         order_total = sum(item['price'] * item['quantity'] for item in order_items)
         
         new_order = Order(
@@ -78,14 +79,15 @@ def place_order():
             timestamp=now,
             total=order_total,
             paid=False,
-            note=note  # Add the note to the new order
+            note=note,
+            unqID=generate_unique_id()  # Generate and assign unique ID
         )
         
         session.add(new_order)
         session.commit()
         
-        logging.info(f"New order placed with order_id: {order_id}")
-        return jsonify({"message": "Order placed successfully", "order_id": order_id}), 201
+        logging.info(f"New order placed with order_id: {order_id}, unqID: {new_order.unqID}")
+        return jsonify({"message": "Order placed successfully", "order_id": order_id, "unqID": new_order.unqID}), 201
     
     except Exception as e:
         logging.error(f"Error placing order: {str(e)}")
@@ -111,7 +113,8 @@ def get_orders():
                 "timestamp": order.timestamp.isoformat(),
                 "total": order.total,
                 "paid": order.paid,
-                "note": order.note  # Include the note in the response
+                "note": order.note,
+                "unqID": order.unqID  # Include the unique ID in the response
             }
             all_orders.append(order_dict)
             
@@ -131,19 +134,11 @@ def get_orders():
     finally:
         session.close()
 
-@app.route('/orders/<int:order_id>', methods=['DELETE'])
-def delete_order(order_id):
+@app.route('/orders/<string:unq_id>', methods=['DELETE'])
+def delete_order(unq_id):
     session = Session()
     try:
-        date = request.json.get('date')
-        if not date:
-            return jsonify({"error": "Date is required"}), 400
-
-        order_date = datetime.strptime(date, '%Y-%m-%d').date()
-        order = session.query(Order).filter(
-            Order.order_id == order_id,
-            func.date(Order.timestamp) == order_date
-        ).first()
+        order = session.query(Order).filter(Order.unqID == unq_id).first()
         
         if not order:
             return jsonify({"error": "Order not found"}), 404
@@ -151,30 +146,22 @@ def delete_order(order_id):
         session.delete(order)
         session.commit()
         
-        logging.info(f"Order {order_id} on {date} deleted successfully")
+        logging.info(f"Order with unqID {unq_id} deleted successfully")
         return jsonify({"message": "Order deleted successfully"}), 200
     
     except Exception as e:
-        logging.error(f"Error deleting order {order_id} on {date}: {str(e)}")
+        logging.error(f"Error deleting order with unqID {unq_id}: {str(e)}")
         session.rollback()
         return jsonify({"error": "An error occurred while deleting the order"}), 500
     
     finally:
         session.close()
 
-@app.route('/orders/<int:order_id>/toggle-payment', methods=['POST'])
-def toggle_payment(order_id):
+@app.route('/orders/<string:unq_id>/toggle-payment', methods=['POST'])
+def toggle_payment(unq_id):
     session = Session()
     try:
-        date = request.json.get('date')
-        if not date:
-            return jsonify({"error": "Date is required"}), 400
-
-        order_date = datetime.strptime(date, '%Y-%m-%d').date()
-        order = session.query(Order).filter(
-            Order.order_id == order_id,
-            func.date(Order.timestamp) == order_date
-        ).first()
+        order = session.query(Order).filter(Order.unqID == unq_id).first()
         
         if not order:
             return jsonify({"error": "Order not found"}), 404
@@ -182,11 +169,11 @@ def toggle_payment(order_id):
         order.paid = not order.paid
         session.commit()
         
-        logging.info(f"Payment status toggled for order {order_id} on {date}. New status: {'Paid' if order.paid else 'Unpaid'}")
+        logging.info(f"Payment status toggled for order with unqID {unq_id}. New status: {'Paid' if order.paid else 'Unpaid'}")
         return jsonify({"message": "Payment status toggled successfully", "paid": order.paid}), 200
     
     except Exception as e:
-        logging.error(f"Error toggling payment status for order {order_id} on {date}: {str(e)}")
+        logging.error(f"Error toggling payment status for order with unqID {unq_id}: {str(e)}")
         session.rollback()
         return jsonify({"error": "An error occurred while toggling payment status"}), 500
     
