@@ -70,6 +70,7 @@
     {
       "name": "Tea",
       "items": [
+        {"name": "Water Bottle", "price": 10},
         {"name": "Chai", "price": 19},
         {"name": "Masala Chai", "price": 29},
         {"name": "Lemon Iced Tea", "price": 49},
