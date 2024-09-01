@@ -8,19 +8,19 @@
         {"name": "White Sauce Pasta", "price": 119},
         {"name": "Pink Sauce Pasta", "price": 119},
         {"name": "Makhni Pasta", "price": 119},
-        {"name": "Mac and Cheese", "price": 139}
+        {"name": "Mac and Cheese Pasta", "price": 139}
       ]
     },
     {
       "name": "Burger",
       "items": [
-        {"name": "Crispy Veg", "price": 49},
-        {"name": "Crispy Veg Cheese", "price": 69},
-        {"name": "Veg Makhni", "price": 69},
-        {"name": "Paneer Tikki", "price": 69},
-        {"name": "Makhni Paneer Tikki", "price": 79},
-        {"name": "Supreme Veg", "price": 99},
-        {"name": "Supreme Paneer", "price": 119}
+        {"name": "Crispy Veg Burger", "price": 49},
+        {"name": "Crispy Veg Cheese Burger", "price": 69},
+        {"name": "Veg Makhni Burger", "price": 69},
+        {"name": "Paneer Tikki Burger", "price": 69},
+        {"name": "Makhni Paneer Tikki Burger", "price": 79},
+        {"name": "Supreme Veg Burger", "price": 99},
+        {"name": "Supreme Paneer Burger", "price": 119}
       ]
     },
     {
@@ -28,9 +28,9 @@
       "items": [
         {"name": "Aloo Sandwich", "price": 39},
         {"name": "Mixed Veg Sandwich", "price": 69},
-        {"name": "Cheesy Peri Peri", "price": 69},
-        {"name": "Mumbai Style Grill", "price": 79},
-        {"name": "Paneer Tikka Grill", "price": 79},
+        {"name": "Cheesy Peri Peri Sandwich", "price": 69},
+        {"name": "Mumbai Style Grill Sandwich", "price": 79},
+        {"name": "Paneer Tikka Grill Sandwich", "price": 79},
         {"name": "Cheese Burst Pizza sandwich", "price": 89}
       ]
     },
@@ -50,9 +50,9 @@
         {"name": "French Fries", "price": 49},
         {"name": "Cheese Fries", "price": 59},
         {"name": "Peri Peri Fries", "price": 69},
-        {"name": "Plain Salted Corns", "price": 39},
-        {"name": "Masala Sweet Corns", "price": 49},
-        {"name": "Cheesy Corns", "price": 69}
+        {"name": "Plain Salted Corn", "price": 39},
+        {"name": "Masala Sweet Corn", "price": 49},
+        {"name": "Cheesy Corn", "price": 69}
       ]
     },
     {
