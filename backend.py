@@ -17,7 +17,7 @@ CORS(app)
 logging.basicConfig(level=logging.DEBUG)
 
 # Database configuration
-DATABASE_URL = "postgresql://resturantdb_bca1_user:w0YDkOAEGvyhTVKh4FfiRauHP3eHK9Ca@dpg-cr5f7d88fa8c73ae8c90-a.singapore-postgres.render.com/resturantdb_bca1"
+DATABASE_URL = "postgresql://joncafe_user:RVPCMqsw8Y0PUyKyIFSLdPV28a277bSw@dpg-crpv3vt6l47c73aqkf80-a.singapore-postgres.render.com/joncafe"
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
