@@ -5,7 +5,7 @@ import random
 import string
 
 # Database configuration
-DATABASE_URL = "postgresql://resturantdb_7hi6_user:zvNLfYmh2OpnAmelA5hzC9vh5uSDLmYo@dpg-cqduabhu0jms7391aj50-a.singapore-postgres.render.com/resturantdb_7hi6"
+DATABASE_URL = "postgresql://joncafe_user:RVPCMqsw8Y0PUyKyIFSLdPV28a277bSw@dpg-crpv3vt6l47c73aqkf80-a/joncafe"
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
