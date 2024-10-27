@@ -33,7 +33,7 @@ class Order(Base):
     total = Column(Float)
     paid = Column(Boolean)
     note = Column(String(255))
-    unqID = Column(String(10), unique=True)  # New column
+    unqID = Column(String(10), unique=True)
 
 # Create the table
 Base.metadata.create_all(engine)
@@ -80,7 +80,7 @@ def place_order():
             total=order_total,
             paid=False,
             note=note,
-            unqID=generate_unique_id()  # Generate and assign unique ID
+            unqID=generate_unique_id()
         )
         
         session.add(new_order)
@@ -93,6 +93,56 @@ def place_order():
         logging.error(f"Error placing order: {str(e)}")
         session.rollback()
         return jsonify({"error": "An error occurred while placing the order"}), 500
+    
+    finally:
+        session.close()
+
+# New route for editing orders
+@app.route('/orders/<string:unq_id>/edit', methods=['PUT'])
+def edit_order(unq_id):
+    session = Session()
+    try:
+        order = session.query(Order).filter(Order.unqID == unq_id).first()
+        
+        if not order:
+            return jsonify({"error": "Order not found"}), 404
+            
+        if order.paid:
+            return jsonify({"error": "Cannot edit a paid order"}), 400
+        
+        # Get edit data from request
+        edit_data = request.json
+        new_items = edit_data.get('items')
+        new_note = edit_data.get('note', order.note)
+        
+        # Calculate new total
+        new_total = sum(item['price'] * item['quantity'] for item in new_items)
+        
+        # Update the order
+        order.items = json.dumps(new_items)
+        order.total = new_total
+        order.note = new_note
+        
+        session.commit()
+        
+        logging.info(f"Order {unq_id} edited successfully")
+        return jsonify({
+            "message": "Order updated successfully",
+            "order": {
+                "order_id": order.order_id,
+                "items": new_items,
+                "timestamp": order.timestamp.isoformat(),
+                "total": new_total,
+                "paid": order.paid,
+                "note": new_note,
+                "unqID": unq_id
+            }
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error editing order {unq_id}: {str(e)}")
+        session.rollback()
+        return jsonify({"error": "An error occurred while editing the order"}), 500
     
     finally:
         session.close()
@@ -114,7 +164,7 @@ def get_orders():
                 "total": order.total,
                 "paid": order.paid,
                 "note": order.note,
-                "unqID": order.unqID  # Include the unique ID in the response
+                "unqID": order.unqID
             }
             all_orders.append(order_dict)
             
